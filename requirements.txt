@@ -1,1 +1,5 @@
 crewai
+langchain
+langchain_community
+openai
+gradio
