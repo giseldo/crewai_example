@@ -1,13 +1,13 @@
 from crewai import Agent, Task, Crew, LLM
 import gradio as gr
 
-def criar_crew():
+def criar_crew(tema):
     
     groq_llm = LLM(model="groq/llama-3.3-70b-versatile")
 
     pesquisador = Agent(
         role="Pesquisador",
-        goal="Buscar informações detalhadas sobre um tópico.",
+        goal="Buscar informações detalhadas sobre o assunto informado.",
         backstory="Um especialista em coleta de dados e análise de informações.",
         llm=groq_llm
     )
@@ -27,9 +27,9 @@ def criar_crew():
     )
 
     tarefa_pesquisa = Task(
-        description="Pesquise informações detalhadas sobre Aprendizagem de Máquina na estimativa de esforço.",
+        description="Pesquise informações detalhadas sobre {}.".format(tema),
         agent=pesquisador,
-        expected_output='Informações corretas e detalhadas sobre aprendizagem de máquina na estimativa de esforço'
+        expected_output='Informações corretas e detalhadas sobre o assunto informado'
     )
 
     tarefa_redacao = Task(
@@ -39,31 +39,39 @@ def criar_crew():
     )
 
     tarefa_latex = Task(
-        description="Com base nas informações fornecidas pelo pesquisador, crie um documento latex.",
+        description="Com base no resumo, crie um documento latex.",
         agent=latex,
         expected_output='Um documento Latex'
     )
 
     equipe = Crew(
-        agents=[pesquisador, redator],
+        agents=[pesquisador, redator, latex],
         tasks=[tarefa_pesquisa, tarefa_redacao, tarefa_latex]
     )
     
     return equipe
 
 def executar_crew(entrada):
-    equipe = criar_crew()
+    equipe = criar_crew(entrada)
     resultado = equipe.kickoff()
     return resultado
 
 # Interface Gradio
-interface = gr.Interface(
-    fn=executar_crew,
-    inputs=gr.Text("Pesquise informações detalhadas sobre Aprendizagem de Máquina na estimativa de esforço.", interactive=False),
-    outputs="text",
-    title="Crew AI - Pesquisa e Relatório em Latex",
-    description="Clique no botão para executar a equipe de agentes que irão pesquisar e criar um relatório sobre Aprendizagem de Máquina em latex."
-)
-
+with gr.Blocks() as interface:
+    with gr.Row():
+        with gr.Column():
+            gr.Markdown("# Agentes: Pesquisa e Relatório em Latex")
+            gr.Markdown("Clique no botão para executar a equipe de agentes (três) que irão pesquisar e criar um relatório sobre o assunto informados.")
+            tema_input = gr.Textbox(label="Informe o tema")
+            submit_button = gr.Button(value="Executar")
+        with gr.Column():
+            gr.Image(value="diagrama.png", label="Arquitetura interna dos agentes", width=400)
+    with gr.Row():
+        output_text = gr.Textbox(label="Saída documento no formato Latex", show_copy_button=True)    
+    
+    submit_button.click(fn=executar_crew, 
+                        inputs=[tema_input],
+                        outputs=output_text)
+    
 if __name__ == "__main__":
     interface.launch()
