@@ -1,27 +1,29 @@
-from crewai import Agent, Task, Crew
-from langchain_community.llms import OpenAI
+from crewai import Agent, Task, Crew, LLM
 import gradio as gr
 
 def criar_crew():
+    
+    groq_llm = LLM(model="groq/llama-3.3-70b-versatile")
+
     pesquisador = Agent(
         role="Pesquisador",
         goal="Buscar informações detalhadas sobre um tópico.",
         backstory="Um especialista em coleta de dados e análise de informações.",
-        llm=OpenAI(model_name="gpt-4o-mini")
+        llm=groq_llm
     )
 
     redator = Agent(
         role="Redator",
         goal="Resumir as informações encontradas e criar um relatório.",
         backstory="Um redator experiente que transforma dados em textos claros.",
-        llm=OpenAI(model_name="gpt-4o-mini")
+        llm=groq_llm
     )
 
     latex = Agent(
         role="Latex",
         goal="Crie um documento Latex.",
         backstory="Um criador de documentos Latex.",
-        llm=OpenAI(model_name="gpt-4o-mini")
+        llm=groq_llm
     )
 
     tarefa_pesquisa = Task(
@@ -49,7 +51,7 @@ def criar_crew():
     
     return equipe
 
-def executar_crew():
+def executar_crew(entrada):
     equipe = criar_crew()
     resultado = equipe.kickoff()
     return resultado
@@ -57,6 +59,7 @@ def executar_crew():
 # Interface Gradio
 interface = gr.Interface(
     fn=executar_crew,
+    inputs=gr.Text("Pesquise informações detalhadas sobre Aprendizagem de Máquina na estimativa de esforço.", interactive=False),
     outputs="text",
     title="Crew AI - Pesquisa e Relatório em Latex",
     description="Clique no botão para executar a equipe de agentes que irão pesquisar e criar um relatório sobre Aprendizagem de Máquina em latex."

@@ -1,5 +1,3 @@
 crewai
-langchain
-langchain_community
-openai
+groq
 gradio
